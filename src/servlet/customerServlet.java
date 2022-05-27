@@ -3,6 +3,7 @@ package servlet;
 
 import javax.annotation.Resource;
 import javax.json.Json;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -14,14 +15,15 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 @WebServlet(urlPatterns = "/customer")
 public class customerServlet extends HttpServlet {
-   @Resource(name = "java:comp/env/jdbc/pool")
+    @Resource(name = "java:comp/env/jdbc/pool")
     DataSource ds;
 
-   //save the customers
+    //save the customers
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json");
@@ -30,27 +32,27 @@ public class customerServlet extends HttpServlet {
         String address = req.getParameter("address");
         String salary = req.getParameter("salary");
 
-        System.out.println(id+"," +name+","+address+","+salary);
+        System.out.println(id + "," + name + "," + address + "," + salary);
 
         PrintWriter writer = resp.getWriter(); //responser eka print karanna
 
-        Connection connection=null;
+        Connection connection = null;
 
         try {
             connection = ds.getConnection();
             PreparedStatement pstm = connection.prepareStatement("INSERT INTO customer VALUES (?,?,?,?)");
 
-            pstm.setObject(1,id);
-            pstm.setObject(2,name);
-            pstm.setObject(3,address);
-            pstm.setObject(4,salary);
+            pstm.setObject(1, id);
+            pstm.setObject(2, name);
+            pstm.setObject(3, address);
+            pstm.setObject(4, salary);
 
-            if(pstm.executeUpdate()>0){
+            if (pstm.executeUpdate() > 0) {
                 JsonObjectBuilder response = Json.createObjectBuilder();
                 resp.setStatus(HttpServletResponse.SC_CREATED);//response eka create we.
-                response.add("status",200);
-                response.add("message","successfully added");
-                response.add("data","");
+                response.add("status", 200);
+                response.add("message", "successfully added");
+                response.add("data", "");
                 writer.print(response.build());
             }
 
@@ -58,12 +60,11 @@ public class customerServlet extends HttpServlet {
         } catch (SQLException throwables) {
             JsonObjectBuilder response = Json.createObjectBuilder();
             resp.setStatus(HttpServletResponse.SC_OK);
-            response.add("status",400);
-            response.add("message","Error");
-            response.add("data",throwables.getLocalizedMessage());
+            response.add("status", 400);
+            response.add("message", "Error");
+            response.add("data", throwables.getLocalizedMessage());
             writer.print(response.build());
-        }
-        finally {
+        } finally {
             try {
                 connection.close();
             } catch (SQLException throwables) {
@@ -75,7 +76,57 @@ public class customerServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        System.out.println("run");
+        resp.setContentType("application/json");
+
+        JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
+        JsonObjectBuilder response = Json.createObjectBuilder();
+        JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+
+        PrintWriter writer = resp.getWriter();
+
+
+        Connection connection = null;
+        try {
+            String option = req.getParameter("option");
+            connection = ds.getConnection();
+
+            switch (option) {
+                case "GETALL":
+                    ResultSet rst = connection.prepareStatement("SELECT * FROM customer").executeQuery();
+                    while (rst.next()) {
+                        String id = rst.getString(1);
+                        String name = rst.getString(2);
+                        String address = rst.getString(3);
+                        String salary = rst.getString(4);
+
+                        objectBuilder.add("id", id);
+                        objectBuilder.add("name", name);
+                        objectBuilder.add("address", address);
+                        objectBuilder.add("salary", salary);
+
+                        arrayBuilder.add(objectBuilder.build());
+                    }
+                    response.add("status", 200);
+                    response.add("massage", "Done");
+                    response.add("data", arrayBuilder.build());
+                    writer.print(response.build());
+
+                    break;
+
+
+
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        finally {
+            try {
+                connection.close();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        }
+
     }
 
 }
