@@ -137,6 +137,37 @@ public class customerServlet extends HttpServlet {
 
                     break;
 
+                case "SEARCH":
+                    String id = req.getParameter("id");
+                    PreparedStatement pstm = connection.prepareStatement("SELECT * FROM customer WHERE id LIKE ?");
+                    pstm.setObject(1,"%"+id+"%");
+                    ResultSet resultSet = pstm.executeQuery();
+                    while (resultSet.next()){
+                        String custId = resultSet.getString(1);
+                        String custName = resultSet.getString(2);
+                        String custAddress = resultSet.getString(3);
+                        String custSalary = resultSet.getString(4);
+
+                        resp.setStatus(HttpServletResponse.SC_OK);
+
+                        objectBuilder.add("id",custId);
+                        objectBuilder.add("name",custName);
+                        objectBuilder.add("address",custAddress);
+                        objectBuilder.add("salary",custSalary);
+
+                        arrayBuilder.add(objectBuilder.build());
+
+                    }
+                    response.add("data",arrayBuilder.build());
+                    response.add("message","Done");
+                    response.add("status",200);
+                    writer.print(response.build());
+
+                    break;
+
+
+
+
             }
         } catch (SQLException throwables) {
             throwables.printStackTrace();
