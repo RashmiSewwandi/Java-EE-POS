@@ -113,7 +113,29 @@ public class customerServlet extends HttpServlet {
 
                     break;
 
+                case "GENID":
+                    ResultSet rst1 = connection.prepareStatement("SELECT id FROM customer ORDER BY id DESC LIMIT 1").executeQuery();
 
+                    if(rst1.next()){
+                        int temp = Integer.parseInt(rst1.getString(1).split("-")[1]);
+                        temp+=1;
+                        if (temp<10){
+                            objectBuilder.add("id", "C00-00" + temp);
+                        } else if (temp < 100) {
+                            objectBuilder.add("id", "C00-0" + temp);
+                        } else if (temp < 1000) {
+                            objectBuilder.add("id", "C00-" + temp);
+
+                        }
+                    }else{
+                        objectBuilder.add("id", "C00-001");
+                    }
+                    response.add("data", objectBuilder.build());
+                    response.add("massage", "Done");
+                    response.add("status", 200);
+                    writer.print(response.build());
+
+                    break;
 
             }
         } catch (SQLException throwables) {
