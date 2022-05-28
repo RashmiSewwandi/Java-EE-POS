@@ -236,4 +236,43 @@ public class customerServlet extends HttpServlet {
 
 
     }
+
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setContentType("application/json");
+        String customerId = req.getParameter("customerId");
+        JsonObjectBuilder dataMsgBuilder = Json.createObjectBuilder();
+        PrintWriter writer = resp.getWriter();
+
+        Connection connection =null;
+        try {
+             connection = ds.getConnection();
+            PreparedStatement pstm = connection.prepareStatement("DELETE FROM customer WHERE id=?");
+            pstm.setObject(1,customerId);
+            if (pstm.executeUpdate()>0){
+                resp.setStatus(HttpServletResponse.SC_OK); //200
+                dataMsgBuilder.add("data", "");
+                dataMsgBuilder.add("massage", "Customer Deleted");
+                dataMsgBuilder.add("status", "200");
+                writer.print(dataMsgBuilder.build());
+            }
+        } catch (SQLException throwables) {
+
+            dataMsgBuilder.add("status", 400);
+            dataMsgBuilder.add("message", "Error");
+            dataMsgBuilder.add("data", throwables.getLocalizedMessage());
+            writer.print(dataMsgBuilder.build());
+            resp.setStatus(HttpServletResponse.SC_OK); //200
+
+        }
+        finally {
+            try {
+                connection.close();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        }
+
+
+    }
 }
