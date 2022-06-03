@@ -10,7 +10,7 @@ import java.io.IOException;
 public class CORSFiler implements Filter {
 
     public CORSFiler() {
-        System.out.println("run");
+       /* System.out.println("run");*/
     }
 
     @Override
