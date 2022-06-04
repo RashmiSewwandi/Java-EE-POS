@@ -164,9 +164,6 @@ public class itemServlet extends HttpServlet {
 
                     break;
 
-
-
-
             }
         } catch (SQLException throwables) {
             throwables.printStackTrace();
