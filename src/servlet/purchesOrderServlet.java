@@ -1,9 +1,7 @@
 package servlet;
 
 import javax.annotation.Resource;
-import javax.json.Json;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObjectBuilder;
+import javax.json.*;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -122,4 +120,106 @@ public class purchesOrderServlet extends HttpServlet {
 
     }
 
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setContentType("application/json");
+        PrintWriter writer = resp.getWriter();
+        JsonReader reader = Json.createReader(req.getReader());
+        JsonObject jsonObject = reader.readObject();
+        System.out.println(jsonObject);
+
+        JsonObject order = jsonObject.getJsonObject("order");
+        System.out.println(order);
+        JsonArray orderDetail = jsonObject.getJsonArray("orderDetail");
+
+        System.out.println("before if");
+        JsonObjectBuilder response = Json.createObjectBuilder();
+        if (saveOrder(order, orderDetail)) {
+            System.out.println("true");
+            resp.setStatus(HttpServletResponse.SC_CREATED);//201
+            response.add("status", 200);
+            response.add("message", "Order Successful");
+            response.add("data", "");
+        } else {
+            System.out.println("false");
+            resp.setStatus(HttpServletResponse.SC_OK);//201
+            response.add("status", 400);
+            response.add("message", "Order Not Successful");
+            response.add("data", "");
+        }
+        writer.print(response.build());
+    }
+    public boolean saveOrder(JsonObject order, JsonArray orderDetail) {
+
+        try {
+            connection = ds.getConnection();
+            connection.setAutoCommit(false);
+            PreparedStatement pstm = connection.prepareStatement("INSERT INTO orders VALUES(?,?,?)");
+            pstm.setObject(1, order.getString("oid"));
+            pstm.setObject(2, order.getString("date"));
+            pstm.setObject(3, order.getString("customerID"));
+            /*pstm.setObject(4, order.getInt("discount"));
+            pstm.setObject(5, order.getString("total"));
+            pstm.setObject(6, order.getString("subTotal"));*/
+
+            if (pstm.executeUpdate() > 0) {
+                if (saveOrderDetails(order.getString("oid"), orderDetail)) {
+                    connection.commit();
+                    return true;
+                } else {
+                    connection.rollback();
+                    return false;
+                }
+            } else {
+                connection.rollback();
+                return false;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
+
+    }
+
+    public boolean saveOrderDetails(String oid, JsonArray orderDetail) throws SQLException {
+        for (JsonValue orderDetails : orderDetail) {
+            JsonObject orderDetailJsonObj = orderDetails.asJsonObject();
+            PreparedStatement pstm = connection.prepareStatement("INSERT INTO orderdetails VALUES(?,?,?,?)");
+            pstm.setObject(1, oid);
+            pstm.setObject(2, orderDetailJsonObj.getString("itemCode"));
+            pstm.setObject(3, orderDetailJsonObj.getString("qty"));
+            pstm.setObject(4, orderDetailJsonObj.getString("unitPrice"));
+          //  pstm.setObject(5, orderDetailJsonObj.getString("itemTotal"));
+
+
+
+            if (pstm.executeUpdate() > 0) {
+                if (updateItem(orderDetailJsonObj.getString("itemCode"), orderDetailJsonObj.getString("qty"))) {
+
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+
+        }
+        return true;
+    }
+    public boolean updateItem(String ItemCode, String itemQty) throws SQLException {
+        PreparedStatement pstm = connection.prepareStatement("UPDATE item SET qtyOnHand=(qtyOnHand-?) WHERE code=?");
+        pstm.setObject(1, itemQty);
+        pstm.setObject(2, ItemCode);
+        return pstm.executeUpdate() > 0;
+    }
 }
