@@ -1,6 +1,5 @@
 package servlet;
 
-
 import javax.annotation.Resource;
 import javax.json.*;
 import javax.servlet.ServletException;
@@ -16,34 +15,35 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-@WebServlet(urlPatterns = "/customer")
-public class customerServlet extends HttpServlet {
-    @Resource(name = "java:comp/env/jdbc/pool")
-    DataSource ds;
 
-    //save the customers
+
+@WebServlet(urlPatterns = "/item")
+public class ItemServlet extends HttpServlet {
+    @Resource(name = "java:comp/env/jdbc/pool")
+    public static DataSource dataSource;
+
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json");
-        String id = req.getParameter("id");
-        String name = req.getParameter("name");
-        String address = req.getParameter("address");
-        String salary = req.getParameter("salary");
+        String code = req.getParameter("code");
+        String description = req.getParameter("description");
+        String qtyOnHand = req.getParameter("qtyOnHand");
+        String unitPrice = req.getParameter("unitPrice");
 
-        System.out.println(id + "," + name + "," + address + "," + salary);
-
-        PrintWriter writer = resp.getWriter(); //responser eka print karanna
+        System.out.println(code + "," + description + "," + qtyOnHand + "," + unitPrice);
+        PrintWriter writer = resp.getWriter();
 
         Connection connection = null;
 
         try {
-            connection = ds.getConnection();
-            PreparedStatement pstm = connection.prepareStatement("INSERT INTO customer VALUES (?,?,?,?)");
+            connection = dataSource.getConnection();
+            PreparedStatement pstm = connection.prepareStatement("INSERT INTO item VALUES (?,?,?,?)");
 
-            pstm.setObject(1, id);
-            pstm.setObject(2, name);
-            pstm.setObject(3, address);
-            pstm.setObject(4, salary);
+            pstm.setObject(1, code);
+            pstm.setObject(2, description);
+            pstm.setObject(3, qtyOnHand);
+            pstm.setObject(4, unitPrice);
 
             if (pstm.executeUpdate() > 0) {
                 JsonObjectBuilder response = Json.createObjectBuilder();
@@ -54,7 +54,6 @@ public class customerServlet extends HttpServlet {
                 writer.print(response.build());
             }
 
-
         } catch (SQLException throwables) {
             JsonObjectBuilder response = Json.createObjectBuilder();
             resp.setStatus(HttpServletResponse.SC_OK);
@@ -62,11 +61,14 @@ public class customerServlet extends HttpServlet {
             response.add("message", "Error");
             response.add("data", throwables.getLocalizedMessage());
             writer.print(response.build());
-        } finally {
-            try {
-                connection.close();
-            } catch (SQLException throwables) {
-                throwables.printStackTrace();
+        }
+        finally {
+            {
+                try {
+                    connection.close();
+                } catch (SQLException throwables) {
+                    throwables.printStackTrace();
+                }
             }
         }
 
@@ -82,25 +84,24 @@ public class customerServlet extends HttpServlet {
 
         PrintWriter writer = resp.getWriter();
 
-
         Connection connection = null;
         try {
             String option = req.getParameter("option");
-            connection = ds.getConnection();
+            connection = dataSource.getConnection();
 
             switch (option) {
                 case "GETALL":
-                    ResultSet rst = connection.prepareStatement("SELECT * FROM customer").executeQuery();
+                    ResultSet rst = connection.prepareStatement("SELECT * FROM item").executeQuery();
                     while (rst.next()) {
-                        String id = rst.getString(1);
-                        String name = rst.getString(2);
-                        String address = rst.getString(3);
-                        String salary = rst.getString(4);
+                        String code = rst.getString(1);
+                        String description = rst.getString(2);
+                        int qtyOnHand = rst.getInt(3);
+                        double unitPrice = rst.getDouble(4);
 
-                        objectBuilder.add("id", id);
-                        objectBuilder.add("name", name);
-                        objectBuilder.add("address", address);
-                        objectBuilder.add("salary", salary);
+                        objectBuilder.add("code", code);
+                        objectBuilder.add("description", description);
+                        objectBuilder.add("qtyOnHand", qtyOnHand);
+                        objectBuilder.add("unitPrice", unitPrice);
 
                         arrayBuilder.add(objectBuilder.build());
                     }
@@ -112,21 +113,21 @@ public class customerServlet extends HttpServlet {
                     break;
 
                 case "GENID":
-                    ResultSet rst1 = connection.prepareStatement("SELECT id FROM customer ORDER BY id DESC LIMIT 1").executeQuery();
+                    ResultSet rst1 = connection.prepareStatement("SELECT code FROM item ORDER BY code DESC LIMIT 1").executeQuery();
 
                     if(rst1.next()){
                         int temp = Integer.parseInt(rst1.getString(1).split("-")[1]);
                         temp+=1;
                         if (temp<10){
-                            objectBuilder.add("id", "C00-00" + temp);
+                            objectBuilder.add("code", "I00-00" + temp);
                         } else if (temp < 100) {
-                            objectBuilder.add("id", "C00-0" + temp);
+                            objectBuilder.add("code", "I00-0" + temp);
                         } else if (temp < 1000) {
-                            objectBuilder.add("id", "C00-" + temp);
+                            objectBuilder.add("code", "I00-" + temp);
 
                         }
                     }else{
-                        objectBuilder.add("id", "C00-001");
+                        objectBuilder.add("code", "I00-001");
                     }
                     response.add("data", objectBuilder.build());
                     response.add("massage", "Done");
@@ -136,22 +137,22 @@ public class customerServlet extends HttpServlet {
                     break;
 
                 case "SEARCH":
-                    String id = req.getParameter("id");
-                    PreparedStatement pstm = connection.prepareStatement("SELECT * FROM customer WHERE id LIKE ?");
-                    pstm.setObject(1,"%"+id+"%");
+                    String code = req.getParameter("code");
+                    PreparedStatement pstm = connection.prepareStatement("SELECT * FROM item WHERE code LIKE ?");
+                    pstm.setObject(1,"%"+code+"%");
                     ResultSet resultSet = pstm.executeQuery();
                     while (resultSet.next()){
-                        String custId = resultSet.getString(1);
-                        String custName = resultSet.getString(2);
-                        String custAddress = resultSet.getString(3);
-                        String custSalary = resultSet.getString(4);
+                        String ItemCode = resultSet.getString(1);
+                        String ItemName = resultSet.getString(2);
+                        String ItemPrice = resultSet.getString(3);
+                        String ItemQTYOnHand = resultSet.getString(4);
 
                         resp.setStatus(HttpServletResponse.SC_OK);
 
-                        objectBuilder.add("id",custId);
-                        objectBuilder.add("name",custName);
-                        objectBuilder.add("address",custAddress);
-                        objectBuilder.add("salary",custSalary);
+                        objectBuilder.add("code",ItemCode);
+                        objectBuilder.add("description",ItemName);
+                        objectBuilder.add("qtyOnHand",ItemPrice);
+                        objectBuilder.add("unitPrice",ItemQTYOnHand);
 
                         arrayBuilder.add(objectBuilder.build());
 
@@ -162,9 +163,6 @@ public class customerServlet extends HttpServlet {
                     writer.print(response.build());
 
                     break;
-
-
-
 
             }
         } catch (SQLException throwables) {
@@ -178,33 +176,31 @@ public class customerServlet extends HttpServlet {
             }
         }
 
-
-
     }
 
-    //update
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json");
         JsonReader reader = Json.createReader(req.getReader());
         JsonObject jsonObject = reader.readObject();
 
-        String id = jsonObject.getString("id");
-        String name = jsonObject.getString("name");
-        String address = jsonObject.getString("address");
-        String salary = jsonObject.getString("salary");
+
+        String code = jsonObject.getString("code");
+        String description = jsonObject.getString("description");
+        String qtyOnHand = jsonObject.getString("qtyOnHand");
+        String unitPrice = jsonObject.getString("unitPrice");
 
         PrintWriter writer = resp.getWriter();
 
         Connection connection =null;
         try {
 
-            connection = ds.getConnection();
-            PreparedStatement pstm = connection.prepareStatement("UPDATE customer SET name=?,address=?,salary=? WHERE id=?");
-            pstm.setObject(1,name);
-            pstm.setObject(2,address);
-            pstm.setObject(3,salary);
-            pstm.setObject(4,id);
+            connection = dataSource.getConnection();
+            PreparedStatement pstm = connection.prepareStatement("UPDATE item SET description=?,qtyOnHand=?,unitPrice=? WHERE code=?");
+            pstm.setObject(1,description);
+            pstm.setObject(2,qtyOnHand);
+            pstm.setObject(3,unitPrice);
+            pstm.setObject(4,code);
 
             if(pstm.executeUpdate()>0){
                 JsonObjectBuilder response = Json.createObjectBuilder();//{"data":[],"massage":"Done","status":200}
@@ -233,22 +229,20 @@ public class customerServlet extends HttpServlet {
                 throwables.printStackTrace();
             }
         }
-
-
     }
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json");
-        String customerId = req.getParameter("customerId");
+        String code = req.getParameter("code");
         JsonObjectBuilder dataMsgBuilder = Json.createObjectBuilder();
         PrintWriter writer = resp.getWriter();
 
         Connection connection =null;
         try {
-             connection = ds.getConnection();
-            PreparedStatement pstm = connection.prepareStatement("DELETE FROM customer WHERE id=?");
-            pstm.setObject(1,customerId);
+            connection = dataSource.getConnection();
+            PreparedStatement pstm = connection.prepareStatement("DELETE FROM item WHERE code=?");
+            pstm.setObject(1,code);
             if (pstm.executeUpdate()>0){
                 resp.setStatus(HttpServletResponse.SC_OK); //200
                 dataMsgBuilder.add("data", "");
@@ -272,7 +266,5 @@ public class customerServlet extends HttpServlet {
                 throwables.printStackTrace();
             }
         }
-
-
     }
 }
