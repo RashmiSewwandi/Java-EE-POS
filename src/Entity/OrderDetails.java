@@ -4,6 +4,19 @@ public class OrderDetails {
     private String oid;
     private String itemCode;
     private int qty;
+    private double unitPrice;
+
+    public OrderDetails(String oid, String itemCode, int qty, double unitPrice) {
+        this.setOid(oid);
+        this.setItemCode(itemCode);
+        this.setQty(qty);
+        this.setUnitPrice(unitPrice);
+    }
+
+
+    public OrderDetails() {
+    }
+
 
     public String getOid() {
         return oid;
@@ -35,18 +48,6 @@ public class OrderDetails {
 
     public void setUnitPrice(double unitPrice) {
         this.unitPrice = unitPrice;
-    }
-
-    private double unitPrice;
-
-    public OrderDetails(String oid, String itemCode, int qty, double unitPrice) {
-        this.oid = oid;
-        this.itemCode = itemCode;
-        this.qty = qty;
-        this.unitPrice = unitPrice;
-    }
-
-    public OrderDetails() {
     }
 
     @Override

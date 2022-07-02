@@ -1,8 +1,8 @@
 package dao.custom.impl;
 
+import Entity.Orders;
 import com.sun.xml.internal.bind.v2.model.core.ID;
 import dao.custom.OrderDAO;
-import entity.Order;
 import servlet.OrderServlet;
 
 import javax.json.Json;
@@ -16,13 +16,13 @@ import java.sql.SQLException;
 public class OrderDAOImpl implements OrderDAO {
 
     @Override
-    public boolean add(Order order) throws SQLException, ClassNotFoundException {
+    public boolean add(Orders order) throws SQLException, ClassNotFoundException {
         Connection connection = OrderServlet.dataSource.getConnection();
-        PreparedStatement pst = connection.prepareStatement("INSERT into `Order` values (?,?,?,?)");
-        pst.setObject(1,order.getOrderID());
-        pst.setObject(2,order.getOrderDate());
-        pst.setObject(3,order.getOrderTime());
-        pst.setObject(4,order.getCustID());
+        PreparedStatement pst = connection.prepareStatement("INSERT into Orders values (?,?,?)");
+        pst.setObject(1,order.getOid());
+        pst.setObject(2,order.getDate());
+        pst.setObject(3,order.getCustomerID());
+
 
         int ex = pst.executeUpdate();
         connection.close();
@@ -38,7 +38,7 @@ public class OrderDAOImpl implements OrderDAO {
 
 
     @Override
-    public boolean update(Order order) throws SQLException, ClassNotFoundException {
+    public boolean update(Orders order) throws SQLException, ClassNotFoundException {
         return false;
     }
 
@@ -53,7 +53,7 @@ public class OrderDAOImpl implements OrderDAO {
         JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
 
         Connection connection = OrderServlet.dataSource.getConnection();
-        PreparedStatement pts  = connection.prepareStatement("select * from `Order`");
+        PreparedStatement pts  = connection.prepareStatement("select * from Orders");
         ResultSet rst = pts.executeQuery();
         while (rst.next()){
             String  OrderID = rst.getString(1);

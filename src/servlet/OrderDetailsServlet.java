@@ -17,9 +17,9 @@ import java.sql.SQLException;
 
 
 @WebServlet(urlPatterns = "/order")
-public class purchesOrderServlet extends HttpServlet {
+public class OrderDetailsServlet extends HttpServlet {
     @Resource(name = "java:comp/env/jdbc/pool")
-    DataSource ds;
+    public static DataSource dataSource;
     Connection connection = null;
 
     @Override
@@ -32,7 +32,7 @@ public class purchesOrderServlet extends HttpServlet {
 
 
         try {
-            connection = ds.getConnection();
+            connection = dataSource.getConnection();
             ResultSet rst;
             PreparedStatement pstm;
             String option = req.getParameter("option");
@@ -152,7 +152,7 @@ public class purchesOrderServlet extends HttpServlet {
     public boolean saveOrder(JsonObject order, JsonArray orderDetail) {
 
         try {
-            connection = ds.getConnection();
+            connection = dataSource.getConnection();
             connection.setAutoCommit(false);
             PreparedStatement pstm = connection.prepareStatement("INSERT INTO orders VALUES(?,?,?)");
             pstm.setObject(1, order.getString("oid"));

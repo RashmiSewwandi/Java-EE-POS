@@ -27,7 +27,7 @@ ItemDAOImpl  implements ItemDAO {
         pstm.setDouble(3, item.getUnitPrice());
         pstm.setInt(4, item.getQtyOnHand());
 
-        System.out.println(item.getItemCode());
+        System.out.println(item.getCode());
 
         int executeUpdate = pstm.executeUpdate();
         connection.close();

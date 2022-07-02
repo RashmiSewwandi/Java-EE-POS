@@ -1,8 +1,8 @@
 package dao.custom.impl;
 
+import Entity.OrderDetails;
 import com.sun.xml.internal.bind.v2.model.core.ID;
 import dao.custom.OrderDetailsDAO;
-import entity.Order_Details;
 import servlet.OrderDetailsServlet;
 
 import javax.json.Json;
@@ -15,14 +15,14 @@ import java.sql.SQLException;
 
 public class OrderDetailsDAOImpl  implements OrderDetailsDAO {
     @Override
-    public boolean add(Order_Details os) throws SQLException, ClassNotFoundException {
+    public boolean add(OrderDetails os) throws SQLException, ClassNotFoundException {
         Connection connection = OrderDetailsServlet.dataSource.getConnection();
-        PreparedStatement pst = connection.prepareStatement("INSERT into `Order Details` values (?,?,?,?,?)");
-        pst.setObject(1,os.getOrderID());
+        PreparedStatement pst = connection.prepareStatement("INSERT into orderdetails values (?,?,?,?,?)");
+        pst.setObject(1,os.getOid());
         pst.setObject(2,os.getItemCode());
-        pst.setObject(3,os.getOrderqty());
-        pst.setObject(4,os.getDiscount());
-        pst.setObject(5,os.getBalance());
+        pst.setObject(3,os.getQty());
+        pst.setObject(4,os.getUnitPrice());
+
 
         int ex = pst.executeUpdate();
         connection.close();
@@ -38,7 +38,7 @@ public class OrderDetailsDAOImpl  implements OrderDetailsDAO {
 
 
     @Override
-    public boolean update(Order_Details order_details) throws SQLException, ClassNotFoundException {
+    public boolean update(OrderDetails order_details) throws SQLException, ClassNotFoundException {
         return false;
     }
 

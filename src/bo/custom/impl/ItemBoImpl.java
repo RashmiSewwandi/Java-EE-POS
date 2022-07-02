@@ -1,10 +1,11 @@
 package bo.custom.impl;
 
+import Entity.Item;
 import bo.custom.ItemBo;
 import dao.DAOFactory;
 import dao.custom.impl.ItemDAOImpl;
 import dto.ItemDTO;
-import entity.Item;
+
 
 import javax.json.JsonArrayBuilder;
 import java.sql.SQLException;
@@ -16,7 +17,7 @@ public class ItemBoImpl implements ItemBo {
 
     @Override
     public boolean addItem(ItemDTO i) throws SQLException, ClassNotFoundException {
-        Item item1 = new Item(i.getItemCode(),i.getItemName(),i.getPrice(),i.getQty());
+        Item item1 = new Item(i.getCode(),i.getDescription(),i.getQtyOnHand(),i.getUnitPrice());
         return itemDAO.add(item1);
     }
 
@@ -27,7 +28,7 @@ public class ItemBoImpl implements ItemBo {
 
     @Override
     public boolean updateItem(ItemDTO i) throws SQLException, ClassNotFoundException {
-        return itemDAO.update(new Item(i.getItemCode(),i.getItemName(),i.getPrice(),i.getQty()));
+        return itemDAO.update(new Item(i.getCode(),i.getDescription(),i.getQtyOnHand(),i.getUnitPrice()));
     }
 
     @Override

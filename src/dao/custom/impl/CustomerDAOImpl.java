@@ -105,7 +105,7 @@ public class CustomerDAOImpl implements CustomerDAO {
                     resultSet.getString(1),
                     resultSet.getString(2),
                     resultSet.getString(3),
-                    resultSet.getDouble(4)
+                    resultSet.getInt(4)
             );
 
         }
