@@ -53,7 +53,7 @@ public class OrderDetailsDAOImpl  implements OrderDetailsDAO {
         JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
 
         Connection connection = OrderDetailsServlet.dataSource.getConnection();
-        PreparedStatement pts  = connection.prepareStatement("select * from `Order Details`");
+        PreparedStatement pts  = connection.prepareStatement("select * from OrderDetails");
         ResultSet rst = pts.executeQuery();
         while (rst.next()){
             String  orderID = rst.getString(1);
